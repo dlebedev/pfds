@@ -38,6 +38,6 @@ fun update ([], _, _) = raise Subscript
   | update (x :: xs, i, y) = x :: update (xs, i-1, y)
 
 (* exercise 2.1 *)
-fun suffixes [] = []
+fun suffixes [] = [[]]
   | suffixes xs = xs :: (suffixes o tl) xs
 end
