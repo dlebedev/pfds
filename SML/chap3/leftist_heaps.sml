@@ -29,8 +29,10 @@ functor LeftistHeap (Element : Ordered) : Heap = struct
 
         fun rank E = 0
           | rank (T (r,_,_,_)) = r
-        fun makeT (x, a, b) = if rank a >= rank b then T (rank b + 1, x, a, b)
-                              else T (rank a + 1, x, b, a)
+        fun makeT (x, a, b) =
+            if rank a >= rank b then T (rank b + 1, x, a, b)
+            else T (rank a + 1, x, b, a)
+
         val empty = E
         fun isEmpty E = true | isEmpty  _ = false
 
@@ -54,8 +56,9 @@ functor LeftistHeap_3_2 (Base : Heap) : Heap = struct
 
         fun rank E = 0
           | rank (T (r,_,_,_)) = r
-        fun makeT (x, a, b) = if rank a >= rank b then T (rank b + 1, x, a, b)
-                              else T (rank a + 1, x, b, a)
+        fun makeT (x, a, b) =
+            if rank a >= rank b then T (rank b + 1, x, a, b)
+            else T (rank a + 1, x, b, a)
 
         val empty     = Base.empty
         val isEmpty   = Base.isEmpty
@@ -66,6 +69,69 @@ functor LeftistHeap_3_2 (Base : Heap) : Heap = struct
           | insert (x, h as T (r, y, a, b)) =
             if Elem.leq (x, y) then makeT (x, E, h)
             else makeT (y, a, insert (x, b))
+
+        val findMin   = Base.findMin
+        val deleteMin = Base.deleteMin
+        end
+
+signature Heap_3_3 = sig
+    include Heap
+
+    val fromList : Elem.T list -> Heap
+end
+
+functor LeftistHeap_3_3 (Base : Heap) : Heap_3_3 = struct
+        structure Elem = Base.Elem
+        datatype Heap = datatype Base.Heap
+
+        fun rank E = 0
+          | rank (T (r,_,_,_)) = r
+        fun makeT (x, a, b) =
+            if rank a >= rank b then T (rank b + 1, x, a, b)
+            else T (rank a + 1, x, b, a)
+
+        val empty     = Base.empty
+        val isEmpty   = Base.isEmpty
+
+        val merge     = Base.merge
+
+        fun insert (x, E) = T (1, x, E, E)
+          | insert (x, h as T (r, y, a, b)) =
+            if Elem.leq (x, y) then makeT (x, E, h)
+            else makeT (y, a, insert (x, b))
+
+        val findMin   = Base.findMin
+        val deleteMin = Base.deleteMin
+
+        val fromList =
+            let fun aux [] = [empty]
+                  | aux [x] = [x]
+                  | aux [x, y] = [merge (x, y)]
+                  | aux (x::y::ys) = aux (merge (x, y) :: aux ys)
+            in (hd o aux o map (fn x => T (1, x, E, E)))
+            end
+        end
+
+functor LeftistHeap_3_4 (Base : Heap) : Heap = struct
+        structure Elem = Base.Elem
+        datatype Heap = datatype Base.Heap
+
+        fun size E = 0
+          | size (T (r,_,_,_)) = r
+        fun makeT (x, a, b) =
+            let val s_a = size a
+                and s_b = size b
+            in
+                if s_a >= s_b then T (s_a + s_b + 1, x, a, b)
+                else T (s_a + s_b + 1, x, b, a)
+            end
+
+        val empty     = Base.empty
+        val isEmpty   = Base.isEmpty
+
+        val merge     = Base.merge
+
+        val insert    = Base.insert
 
         val findMin   = Base.findMin
         val deleteMin = Base.deleteMin
